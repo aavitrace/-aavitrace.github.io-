@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AviTrace — La traçabilité avicole, casier par casier</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;1,9..144,500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #F1F4F1;
+    --surface: #FFFFFF;
+    --ink: #16241F;
+    --ink-soft: #4A5C54;
+    --teal: #1B6E63;
+    --teal-deep: #12463F;
+    --blue: #2B4C7E;
+    --yolk: #E8B75A;
+    --line: #D8E0DA;
+    --radius: 14px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'IBM Plex Sans', sans-serif;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    letter-spacing:-0.01em;
+    margin:0 0 0.4em 0;
+  }
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.72rem;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--teal-deep);
+    display:flex;
+    align-items:center;
+    gap:0.5em;
+  }
+  .eyebrow::before{
+    content:'';
+    width:7px;height:7px;border-radius:50%;
+    background:var(--yolk);
+    display:inline-block;
+  }
+  .mono{ font-family:'IBM Plex Mono', monospace; }
+  a{ color:inherit; }
+  .wrap{ max-width:1180px; margin:0 auto; padding:0 32px; }
+  section{ padding:96px 0; }
+
+  /* ---------- HEADER ---------- */
+  header{
+    position:sticky; top:0; z-index:50;
+    background:rgba(241,244,241,0.86);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  header .wrap{
+    display:flex; align-items:center; justify-content:space-between;
+    padding-top:18px; padding-bottom:18px;
+  }
+  .logo{
+    display:flex; align-items:center; gap:10px;
+    font-family:'Fraunces', serif; font-weight:600; font-size:1.28rem;
+  }
+  .logo-mark{
+    width:26px; height:20px;
+    border-radius:60% 60% 55% 55%/70% 70% 50% 50%;
+    background:linear-gradient(155deg, var(--teal), var(--blue));
+    flex:none;
+  }
+  nav{ display:flex; gap:34px; font-size:0.92rem; color:var(--ink-soft); }
+  nav a{ text-decoration:none; }
+  nav a:hover{ color:var(--teal-deep); }
+  .btn{
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:0.9rem; font-weight:500;
+    padding:10px 20px; border-radius:999px;
+    background:var(--teal-deep); color:#fff;
+    border:none; cursor:pointer; text-decoration:none;
+    display:inline-block;
+  }
+  .btn:hover{ background:var(--teal); }
+  .btn-ghost{
+    background:transparent; color:var(--teal-deep);
+    border:1px solid var(--teal-deep);
+  }
+  .btn-ghost:hover{ background:var(--teal-deep); color:#fff; }
+
+  /* ---------- HERO ---------- */
+  .hero{
+    padding-top:88px; padding-bottom:40px;
+    display:grid; grid-template-columns:1.05fr 0.95fr; gap:56px; align-items:center;
+  }
+  .hero h1{
+    font-size:clamp(2.3rem, 4vw, 3.4rem);
+    line-height:1.08;
+  }
+  .hero h1 em{
+    font-style:italic; color:var(--teal-deep);
+  }
+  .hero p.lede{
+    font-size:1.08rem; color:var(--ink-soft); max-width:46ch; margin:20px 0 30px 0;
+  }
+  .hero-cta{ display:flex; gap:14px; align-items:center; }
+  .hero-note{ font-size:0.8rem; color:var(--ink-soft); margin-top:14px; }
+
+  /* carton visual */
+  .carton{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:20px;
+    padding:22px;
+    box-shadow:0 30px 60px -30px rgba(18,70,63,0.28);
+  }
+  .carton-head{
+    display:flex; justify-content:space-between; align-items:baseline;
+    margin-bottom:14px;
+  }
+  .carton-head .mono{ font-size:0.72rem; color:var(--ink-soft); }
+  .grid-carton{
+    display:grid; grid-template-columns:repeat(4,1fr); gap:10px;
+  }
+  .cell{
+    aspect-ratio:1/1.12;
+    border-radius:50% 50% 46% 46%/58% 58% 42% 42%;
+    background:#EDF1EC;
+    border:1px solid var(--line);
+    position:relative;
+    display:flex; align-items:flex-end; justify-content:center;
+    padding-bottom:8px;
+    opacity:0; transform:translateY(6px) scale(0.9);
+    animation:fillCell 0.5s ease forwards;
+  }
+  .cell span{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.56rem; color:var(--teal-deep); opacity:0;
+  }
+  .cell.role-producteur{ background:#E4F0EA; }
+  .cell.role-veterinaire{ background:#E6ECF5; }
+  .cell.role-pharmacien{ background:#F6EEDD; }
+  .cell.role-chercheur{ background:#EFE7F1; }
+  .cell.filled span{ opacity:1; }
+  @keyframes fillCell{
+    to{ opacity:1; transform:translateY(0) scale(1); }
+  }
+  .carton-legend{
+    display:flex; gap:16px; flex-wrap:wrap; margin-top:16px;
+    font-size:0.72rem; color:var(--ink-soft);
+  }
+  .carton-legend span{ display:inline-flex; align-items:center; gap:6px; }
+  .dot{ width:8px; height:8px; border-radius:50%; display:inline-block; }
+  .dot.p{ background:#8FC1A5; } .dot.v{ background:#8FA6D6; }
+  .dot.ph{ background:#E3C583; } .dot.c{ background:#C6A6CC; }
+
+  @media (prefers-reduced-motion: reduce){
+    .cell{ animation:none; opacity:1; transform:none; }
+    .cell span{ opacity:1; }
+  }
+
+  /* ---------- CHAIN BAND ---------- */
+  .chain{
+    background:var(--teal-deep); color:#EFF6F2;
+  }
+  .chain h2{ color:#fff; }
+  .chain .kicker{ color:#BFE0D4; }
+  .chain-row{
+    display:grid; grid-template-columns:repeat(4,1fr); gap:0; margin-top:56px;
+    position:relative;
+  }
+  .chain-row::before{
+    content:'';
+    position:absolute; top:19px; left:6%; right:6%; height:1px;
+    background:repeating-linear-gradient(90deg, rgba(255,255,255,0.35) 0 8px, transparent 8px 16px);
+  }
+  .chain-step{ text-align:center; padding:0 14px; position:relative; }
+  .chain-num{
+    width:38px; height:38px; margin:0 auto 18px auto;
+    border-radius:50%; background:#fff; color:var(--teal-deep);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'IBM Plex Mono', monospace; font-size:0.78rem; position:relative; z-index:2;
+  }
+  .chain-step h3{ color:#fff; font-size:1.06rem; margin-bottom:8px; }
+  .chain-step p{ color:#CFE4DB; font-size:0.88rem; }
+
+  /* ---------- CASIERS / DATA MODULE ---------- */
+  .casiers-grid{
+    display:grid; grid-template-columns:repeat(4,1fr); gap:18px; margin-top:48px;
+  }
+  .casier-card{
+    background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+    padding:26px 22px;
+  }
+  .casier-card .tag{
+    font-family:'IBM Plex Mono', monospace; font-size:0.68rem; color:var(--ink-soft);
+    border:1px solid var(--line); border-radius:6px; padding:2px 8px; display:inline-block; margin-bottom:14px;
+  }
+  .casier-card h3{ font-size:1.04rem; }
+  .casier-card p{ color:var(--ink-soft); font-size:0.9rem; }
+
+  /* ---------- PORTAIL RECHERCHE ---------- */
+  .portail{
+    display:grid; grid-template-columns:0.95fr 1.05fr; gap:56px; align-items:center;
+  }
+  .portail-mock{
+    background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+    padding:0; overflow:hidden; box-shadow:0 24px 50px -30px rgba(18,70,63,0.25);
+  }
+  .portail-mock-bar{
+    background:#EDF1EC; padding:12px 16px; display:flex; gap:8px; align-items:center;
+    border-bottom:1px solid var(--line);
+    font-family:'IBM Plex Mono', monospace; font-size:0.72rem; color:var(--ink-soft);
+  }
+  .portail-mock-body{ padding:20px; }
+  .anon-row{
+    display:grid; grid-template-columns:1.1fr 1fr 1fr 0.8fr; gap:10px;
+    font-family:'IBM Plex Mono', monospace; font-size:0.74rem;
+    padding:10px 0; border-bottom:1px dashed var(--line); color:var(--ink-soft);
+  }
+  .anon-row.head{ color:var(--ink); font-weight:500; border-bottom:1px solid var(--line); }
+  .anon-row .id{ color:var(--teal-deep); }
+  .badge-anon{
+    background:#F6EEDD; color:#8A6A1F; border-radius:5px; padding:1px 6px; font-size:0.66rem;
+  }
+
+  /* ---------- REMUNERATION ---------- */
+  .remun{
+    background:var(--surface); border:1px solid var(--line); border-radius:20px;
+    padding:52px 48px; display:grid; grid-template-columns:1fr 1fr; gap:48px; align-items:center;
+  }
+  .remun-figure{
+    font-family:'Fraunces', serif; font-size:3.2rem; color:var(--teal-deep);
+    display:flex; align-items:baseline; gap:8px;
+  }
+  .remun-figure .yolk{ color:var(--yolk); font-size:1.6rem; }
+
+  /* ---------- MODULES ESSAIS CLINIQUES ---------- */
+  .modules-grid{
+    display:grid; grid-template-columns:repeat(4,1fr); gap:18px; margin-top:48px;
+  }
+  .module-card{
+    border:1px solid var(--line); border-radius:var(--radius); padding:24px;
+    background:linear-gradient(180deg, #fff, #FBFCFA);
+  }
+  .module-card .mono{ font-size:0.68rem; color:var(--blue); }
+  .module-card h3{ font-size:1rem; margin-top:8px; }
+  .module-card p{ font-size:0.86rem; color:var(--ink-soft); }
+
+  /* ---------- FOOTER CTA ---------- */
+  .cta-final{
+    background:linear-gradient(155deg, var(--teal-deep), var(--blue));
+    color:#fff; border-radius:24px; padding:64px 48px; text-align:center;
+    margin:0 32px 32px 32px;
+  }
+  .cta-final h2{ color:#fff; font-size:clamp(1.8rem,3vw,2.5rem); }
+  .cta-final p{ color:#DCEAE4; max-width:52ch; margin:0 auto 28px auto; }
+  footer{
+    padding:36px 0 60px 0; text-align:center; color:var(--ink-soft); font-size:0.82rem;
+  }
+
+  @media (max-width: 880px){
+    nav{ display:none; }
+    .hero{ grid-template-columns:1fr; }
+    .chain-row{ grid-template-columns:1fr 1fr; gap:32px 0; }
+    .chain-row::before{ display:none; }
+    .casiers-grid{ grid-template-columns:1fr 1fr; }
+    .modules-grid{ grid-template-columns:1fr 1fr; }
+    .portail{ grid-template-columns:1fr; }
+    .remun{ grid-template-columns:1fr; padding:36px 26px; }
+    .grid-carton{ grid-template-columns:repeat(4,1fr); }
+  }
+  a:focus-visible, button:focus-visible{
+    outline:2px solid var(--blue); outline-offset:3px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="logo"><span class="logo-mark"></span>AviTrace</div>
+    <nav>
+      <a href="#chaine">La chaîne</a>
+      <a href="#casiers">Casiers de données</a>
+      <a href="#recherche">Portail recherche</a>
+      <a href="#essais">Essais cliniques</a>
+    </nav>
+    <a class="btn" href="#cta">Demander une démo</a>
+  </div>
+</header>
+
+<section class="hero wrap">
+  <div>
+    <div class="eyebrow">Traçabilité avicole</div>
+    <h1>Chaque œuf porte une <em>histoire</em>.<br>Nous la rendons lisible.</h1>
+    <p class="lede">AviTrace relie producteurs, vétérinaires et pharmaciens dans un seul registre : chaque vaccin, chaque médicament, chaque lot devient une donnée traçable — sans exposer qui l'a produite.</p>
+    <div class="hero-cta">
+      <a class="btn" href="#cta">Demander une démo</a>
+      <a class="btn btn-ghost" href="#chaine">Voir la chaîne</a>
+    </div>
+    <div class="hero-note mono">producteur · vétérinaire/chercheur · pharmacien · chercheur — un seul casier partagé</div>
+  </div>
+
+  <div class="carton" aria-hidden="false">
+    <div class="carton-head">
+      <span class="mono">CASIER-2026-08</span>
+      <span class="mono">12 alvéoles</span>
+    </div>
+    <div class="grid-carton" id="cartonGrid"></div>
+    <div class="carton-legend">
+      <span><span class="dot p"></span>Producteur</span>
+      <span><span class="dot v"></span>Vétérinaire</span>
+      <span><span class="dot ph"></span>Pharmacien</span>
+      <span><span class="dot c"></span>Chercheur</span>
+    </div>
+  </div>
+</section>
+
+<section class="chain" id="chaine">
+  <div class="wrap">
+    <div class="eyebrow kicker">Le circuit</div>
+    <h2>Un consentement, quatre acteurs, une seule trace</h2>
+    <div class="chain-row">
+      <div class="chain-step">
+        <div class="chain-num">01</div>
+        <h3>Le producteur</h3>
+        <p>Déclare le lot, le vaccin ou le traitement administré au troupeau.</p>
+      </div>
+      <div class="chain-step">
+        <div class="chain-num">02</div>
+        <h3>Le vétérinaire</h3>
+        <p>Valide l'intervention et confirme la posologie dans le registre.</p>
+      </div>
+      <div class="chain-step">
+        <div class="chain-num">03</div>
+        <h3>Le pharmacien</h3>
+        <p>Rattache le médicament délivré au lot, ferme la boucle d'origine.</p>
+      </div>
+      <div class="chain-step">
+        <div class="chain-num">04</div>
+        <h3>Le chercheur</h3>
+        <p>Interroge les tendances anonymisées pour repérer une épidémie tôt.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="casiers">
+  <div class="wrap">
+    <div class="eyebrow">Casiers de renseignements</div>
+    <h2>Chaque partie alimente son casier —<br>la plateforme assemble le tableau complet</h2>
+    <div class="casiers-grid">
+      <div class="casier-card">
+        <span class="tag">CASIER · PRODUCTEUR</span>
+        <h3>Élevage &amp; lots</h3>
+        <p>Effectifs, dates de ponte, mouvements de troupeau, traitements administrés.</p>
+      </div>
+      <div class="casier-card">
+        <span class="tag">CASIER · VÉTÉRINAIRE</span>
+        <h3>Suivi clinique</h3>
+        <p>Diagnostics, prescriptions, posologies validées, visites d'élevage.</p>
+      </div>
+      <div class="casier-card">
+        <span class="tag">CASIER · PHARMACIEN</span>
+        <h3>Délivrance</h3>
+        <p>Numéros de lot des médicaments et vaccins, dates et quantités délivrées.</p>
+      </div>
+      <div class="casier-card">
+        <span class="tag">CASIER · CHERCHEUR</span>
+        <h3>Signal épidémiologique</h3>
+        <p>Tendances agrégées et anonymisées, alertes de recoupement entre élevages.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="recherche">
+  <div class="wrap portail">
+    <div>
+      <div class="eyebrow">Portail recherche</div>
+      <h2>Des données interrogeables, jamais des identités</h2>
+      <p style="color:var(--ink-soft); max-width:48ch;">Les chercheurs et laboratoires consultent des enregistrements anonymisés pour repérer des épidémies ou étudier l'usage de médicaments — l'identité réelle reste connue uniquement de la plateforme et des parties concernées.</p>
+      <a class="btn btn-ghost" href="#cta" style="margin-top:10px;">Explorer le portail</a>
+    </div>
+    <div class="portail-mock">
+      <div class="portail-mock-bar">portail-recherche · requête anonymisée</div>
+      <div class="portail-mock-body">
+        <div class="anon-row head">
+          <span>ID lot</span><span>Région</span><span>Molécule</span><span>Statut</span>
+        </div>
+        <div class="anon-row">
+          <span class="id">LOT-7A21X</span><span>Laurentides</span><span>Amoxicilline</span><span class="badge-anon">anonymisé</span>
+        </div>
+        <div class="anon-row">
+          <span class="id">LOT-9F04C</span><span>Montérégie</span><span>Vaccin IB</span><span class="badge-anon">anonymisé</span>
+        </div>
+        <div class="anon-row">
+          <span class="id">LOT-3D88Q</span><span>Estrie</span><span>Enrofloxacine</span><span class="badge-anon">anonymisé</span>
+        </div>
+        <div class="anon-row">
+          <span class="id">LOT-5K12M</span><span>Laurentides</span><span>Vaccin ND</span><span class="badge-anon">anonymisé</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="remun">
+      <div>
+        <div class="eyebrow">Volet commercial</div>
+        <h2>Plus un producteur documente,<br>plus il est rémunéré</h2>
+        <p style="color:var(--ink-soft);">Chaque déclaration complète — traitement, dosage, résultat — enrichit le signal collectif. AviTrace redistribue une part de cette valeur aux élevages qui partagent le plus.</p>
+      </div>
+      <div>
+        <div class="remun-figure">+<span>18</span><span class="yolk">%</span></div>
+        <p class="mono" style="font-size:0.78rem; color:var(--ink-soft);">valeur moyenne redistribuée aux producteurs les plus actifs du registre</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="essais">
+  <div class="wrap">
+    <div class="eyebrow">Essais cliniques &amp; études</div>
+    <h2>Le même registre, prêt pour la recherche appliquée</h2>
+    <div class="modules-grid">
+      <div class="module-card">
+        <span class="mono">IRT / IWRS</span>
+        <h3>Randomisation &amp; approvisionnement</h3>
+        <p>Attribution des lots à l'étude et gestion des stocks de vaccins en temps réel.</p>
+      </div>
+      <div class="module-card">
+        <span class="mono">REGISTRES</span>
+        <h3>Études observationnelles</h3>
+        <p>Suivi longitudinal des élevages participants, hors intervention contrôlée.</p>
+      </div>
+      <div class="module-card">
+        <span class="mono">eCOA / ePRO</span>
+        <h3>Journal électronique</h3>
+        <p>Observations de terrain saisies directement par le producteur ou le vétérinaire.</p>
+      </div>
+      <div class="module-card">
+        <span class="mono">eCONSENT</span>
+        <h3>Consentement à distance</h3>
+        <p>Accord virtuel entre producteur, vétérinaire et pharmacien avant tout partage.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="cta">
+  <div class="cta-final">
+    <h2>Prêt à tracer votre première alvéole ?</h2>
+    <p>Rejoignez les producteurs, vétérinaires et pharmaciens qui bâtissent le registre avicole le plus lisible du secteur.</p>
+    <a class="btn" style="background:#fff; color:var(--teal-deep);" href="#">Demander une démo</a>
+  </div>
+</section>
+
+<footer class="wrap">
+  AviTrace — traçabilité avicole, de l'élevage au laboratoire.
+</footer>
+
+<script>
+  const roles = ['producteur','veterinaire','pharmacien','chercheur'];
+  const initials = {producteur:'PR', veterinaire:'VT', pharmacien:'PH', chercheur:'CH'};
+  const grid = document.getElementById('cartonGrid');
+  for(let i=0;i<12;i++){
+    const role = roles[i % roles.length];
+    const cell = document.createElement('div');
+    cell.className = 'cell role-' + role;
+    cell.style.animationDelay = (i * 0.09) + 's';
+    const span = document.createElement('span');
+    span.textContent = initials[role] + '-' + (100 + i);
+    cell.appendChild(span);
+    grid.appendChild(cell);
+    setTimeout(()=>cell.classList.add('filled'), i*90 + 400);
+  }
+</script>
+
+</body>
+</html>
